@@ -30,7 +30,7 @@ APPLE_COLOR = (255, 0, 0)
 SNAKE_COLOR = (0, 255, 0)
 
 # Скорость движения змейки:
-SPEED = 20
+SPEED = 5
 
 # Настройка игрового окна:
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
@@ -55,15 +55,41 @@ class GameObject:
 
 class Snake(GameObject):
 
-    def __init__(self, positions=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2),
-                 length=1, direction=RIGHT, next_direction=None,
-                 body_color=(0, 255, 0)):
+    def __init__(self, body_color=(0, 255, 0)):
         super().__init__(body_color)
-        self.length = length
-        self.direction = direction
-        self.next_direction = next_direction
-        self.positions = positions
-         
+        self.positions = [self.position]
+        self.length = 1
+        self.direction = RIGHT
+        self.next_direction = None
+        self.last = None
+
+    def get_head_position(self):
+        head_position = self.positions[0]
+        return head_position
+
+    def move(self):
+        old_x, old_y = self.get_head_position()
+        dx = self.direction[0] * GRID_SIZE
+        dy = self.direction[1] * GRID_SIZE
+        new_x = (old_x + dx) % SCREEN_WIDTH
+        new_y = (old_y + dy) % SCREEN_HEIGHT
+        
+    #    new_x = (old_x + self.direction[0]) % SCREEN_WIDTH
+    #    new_y = (old_y + self.direction[1]) % SCREEN_HEIGHT
+    #   if self.positions[0] in self.positions[1:]:
+    #       self.reset()
+        self.positions.insert(0, (new_x, new_y))
+        if len(self.positions) > self.length:
+            self.positions.pop()
+            
+        self.last = self.positions[-1]
+
+
+    def reset(self):
+        self.positions = [self.position]
+        self.length = 1
+        self.next_direction = None
+        self.direction = (randint(-1, 1), randint(-1, 1))
 
 # Метод draw класса Snake
     def draw(self, surface):
@@ -129,13 +155,12 @@ class Apple(GameObject):
         pygame.draw.rect(surface, self.body_color, rect)
         pygame.draw.rect(surface, BORDER_COLOR, rect, 1)
 
+
 def main():
     # Тут нужно создать экземпляры классов.
-    apple = Apple()
-    apple.draw(screen)
-    snake = Snake()
-    snake.draw(screen)
 
+    apple = Apple()
+    snake = Snake()
 
     while True:
         clock.tick(SPEED)
@@ -143,10 +168,13 @@ def main():
             if event.type == pygame.QUIT:
                 pygame.quit()
                 return
-
-        pygame.display.update()
         # Тут опишите основную логику игры.
-        # ...
+        snake.handle_keys()
+        snake.update_direction()
+        snake.move()
+        apple.draw(screen)
+        snake.draw(screen)
+        pygame.display.update()
 
 
 if __name__ == '__main__':
