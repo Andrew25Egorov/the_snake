@@ -30,7 +30,7 @@ APPLE_COLOR = (255, 0, 0)
 SNAKE_COLOR = (0, 255, 0)
 
 # Скорость движения змейки:
-SPEED = 5
+SPEED = 10
 
 # Настройка игрового окна:
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT), 0, 32)
@@ -67,23 +67,26 @@ class Snake(GameObject):
         head_position = self.positions[0]
         return head_position
 
+#  Метод обновления направления после нажатия на кнопку
+    def update_direction(self):
+        if self.next_direction:
+            self.direction = self.next_direction
+            self.next_direction = None
+
     def move(self):
         old_x, old_y = self.get_head_position()
         dx = self.direction[0] * GRID_SIZE
         dy = self.direction[1] * GRID_SIZE
         new_x = (old_x + dx) % SCREEN_WIDTH
         new_y = (old_y + dy) % SCREEN_HEIGHT
-        
-    #    new_x = (old_x + self.direction[0]) % SCREEN_WIDTH
-    #    new_y = (old_y + self.direction[1]) % SCREEN_HEIGHT
-    #   if self.positions[0] in self.positions[1:]:
-    #       self.reset()
+        self.new_position = (new_x, new_y)
+        if self.new_position in self.positions[1:]:
+            self.reset()
+            screen.fill(BOARD_BACKGROUND_COLOR)
         self.positions.insert(0, (new_x, new_y))
+        self.last = self.positions[-1]
         if len(self.positions) > self.length:
             self.positions.pop()
-            
-        self.last = self.positions[-1]
-
 
     def reset(self):
         self.positions = [self.position]
@@ -129,13 +132,6 @@ class Snake(GameObject):
                 elif event.key == pygame.K_RIGHT and game_object.direction != LEFT:
                     game_object.next_direction = RIGHT
 
-#  Метод обновления направления после нажатия на кнопку
-    def update_direction(self):
-        if self.next_direction:
-            self.direction = self.next_direction
-            self.next_direction = None
-
-
 class Apple(GameObject):
 
     def __init__(self, body_color=(255, 0, 0)):
@@ -143,8 +139,8 @@ class Apple(GameObject):
         self.randomize_position()
 
     def randomize_position(self):
-        self.position = (randint(0, GRID_WIDTH) * GRID_SIZE,
-                         randint(0, GRID_HEIGHT) * GRID_SIZE)
+        self.position = (randint(0, GRID_WIDTH - 1) * GRID_SIZE,
+                         randint(0, GRID_HEIGHT - 1) * GRID_SIZE)
 
     # Метод draw класса Apple
     def draw(self, surface):
@@ -164,14 +160,18 @@ def main():
 
     while True:
         clock.tick(SPEED)
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT:
-                pygame.quit()
-                return
+        Snake.handle_keys(snake)
+    #    for event in pygame.event.get():
+    #        if event.type == pygame.QUIT:
+    #            pygame.quit()
+    #            return
         # Тут опишите основную логику игры.
-        snake.handle_keys()
+    #    handle_keys(snake)
         snake.update_direction()
         snake.move()
+        if snake.new_position == apple.position:
+            snake.length += 1
+            apple.randomize_position()
         apple.draw(screen)
         snake.draw(screen)
         pygame.display.update()
