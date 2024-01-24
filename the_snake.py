@@ -13,6 +13,7 @@ DOWN = (0, 1)
 LEFT = (-1, 0)
 RIGHT = (1, 0)
 DIRECT = (UP, DOWN, LEFT, RIGHT)
+QUIT = 'game over'
 
 BOARD_BACKGROUND_COLOR = (0, 0, 0)
 
@@ -36,7 +37,7 @@ def handle_keys(game_object):
     """
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
-            return 'quit'
+            return QUIT
         elif event.type == pygame.KEYDOWN:
             if event.key == pygame.K_UP and game_object.direction != DOWN:
                 game_object.next_direction = UP
@@ -64,9 +65,10 @@ class GameObject:
         в дочерних классах. Этот метод должен определять,
         как объект будет отрисовываться на экране.
         """
-        surface
-        raise NotImplementedError('Абстрактный метод базового класса, который '
-                                  'НУЖНО ПЕРЕОПРЕДЕЛИТЬ в дочерних классах!')
+        raise NotImplementedError(f'Абстрактный метод базового класса '
+                                  f'{type(self).__name__}, '
+                                  'который НУЖНО ПЕРЕОПРЕДЕЛИТЬ в дочерних '
+                                  'классах!')
 
 
 class Snake(GameObject):
@@ -195,11 +197,10 @@ def main():
 
     apple = Apple()
     snake = Snake()
-    running = True
-    while running:
+    while True:
         clock.tick(SPEED)
-        if handle_keys(snake) == 'quit':
-            running = False
+        if handle_keys(snake) == QUIT:
+            break
         snake.update_direction()
         snake.move()
         if snake.positions[0] == list(apple.position):
